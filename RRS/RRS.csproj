@@ -9,10 +9,13 @@
 
     <ItemGroup>
       <Folder Include="Data/Database/Diagrams/" />
+      <Folder Include="Data/Logs/" />
     </ItemGroup>
 
     <ItemGroup>
+      <PackageReference Include="Colorful.Console" Version="1.2.15" />
       <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.10" />
+      <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
       <PackageReference Include="System.Data.SQLite" Version="1.0.119" />
     </ItemGroup>
 

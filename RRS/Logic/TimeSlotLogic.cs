@@ -16,7 +16,7 @@ public static class TimeSlotLogic {
         List<ReservationTimeSlots> timeSlots = Database.SelectReservationTimeSlots();
         while (true) {
             foreach (ReservationTimeSlots timeslot in timeSlots) {
-                Console.WriteLine($"{timeslot.ID} - date: {timeslot.GetDate()} from {timeslot.GetStartTime24()} until {timeslot.GetEndTime24()}");
+                Console.WriteLine($"date: {timeslot.GetDate()} from {timeslot.GetStartTime24()} until {timeslot.GetEndTime24()}");
             }
             Display.PrintText("Please select a Timeslot you want to book:");
             string input = Console.ReadLine();
@@ -49,6 +49,8 @@ public static class TimeSlotLogic {
         }
     }
 
+    public static ReservationTimeSlots GetSelectedTimeSlot(int timeslotID) => Database.SelectReservationTimeSlot(timeslotID);
+
     public static bool DeleteTimeSlot(string TimeSlotID, Accounts LoggedinAccounts) {
         return Database.DeleteTimeSlot(TimeSlotID);
     }
@@ -62,8 +64,8 @@ public static class TimeSlotLogic {
 
         TimeOnly nextTime = starttimeday;
         for (int i = 0; i != timeslotAmount; i++) {
-            Console.WriteLine($"GenerateTimeSlots {i}");
-            Thread.Sleep(1500);
+            // Console.WriteLine($"GenerateTimeSlots {i}");
+            // Thread.Sleep(1500);
 
             List<string> addValue = new ();
 
@@ -105,10 +107,12 @@ public static class TimeSlotLogic {
         return returnValue;
     }
 
+    public static string ToDisplayString(ReservationTimeSlots reservationTimeSlots) => $"{reservationTimeSlots.GetDate()} - from {reservationTimeSlots.GetStartTime24()} to {reservationTimeSlots.GetEndTime24()}";
+
     public static List<string> ToDisplayString(List<ReservationTimeSlots> reservationTimeSlots) {
         List<string> returnValue = new ();
         foreach (ReservationTimeSlots timeslot in reservationTimeSlots) {
-            returnValue.Add($"{timeslot.GetDate()} - from {timeslot.GetStartTime24()} to {timeslot.GetEndTime24()}");
+            returnValue.Add(ToDisplayString(timeslot));
         }
         return returnValue;
     }

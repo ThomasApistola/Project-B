@@ -7,7 +7,16 @@ public static class AccountLogic {
             }
         } 
     }
-    
+
+    public static string GetAccountsDisplay(Accounts LoggedInAccount) {
+        string returnValue = "";
+        foreach (Accounts accounts in Database.SelectAccount()) {
+            if (accounts.ID != LoggedInAccount.ID) {
+                returnValue += $"ID: {accounts.ID} - {accounts.FirstName} {accounts.LastName} - Account level: {accounts.AccountLevel} - {Database.SelectAccountLevel(accounts.AccountLevel).Name}\n";
+            }
+        }
+        return returnValue;
+    }
 
     public static Accounts GetSelectedAccount(Accounts LoggedInAccount, string input) {
         if (int.TryParse(input, out int output)) {
@@ -15,6 +24,15 @@ public static class AccountLogic {
                 if (accounts.ID == output && accounts.ID != LoggedInAccount.ID) {
                     return accounts;
                 }
+            }
+        }
+        return null;
+    }
+
+    public static Accounts GetSelectedAccount(int input) {
+        foreach (Accounts accounts in Database.SelectAccount()) {
+            if (accounts.ID == input) {
+                return accounts;
             }
         }
         return null;
@@ -78,7 +96,7 @@ public static class AccountLogic {
                 Console.WriteLine("No results, There were no accounts found with this ID.");
             }
         } else {
-            Console.WriteLine("Invalid input, An ID only consists of number. Please try it again with a valid number");
+            Console.WriteLine("Invalid input, An ID can only consist of numbers. Please try it again with a valid number");
         }
     }
 
@@ -116,14 +134,43 @@ public static class AccountLogic {
             Console.WriteLine("No results, There were no accounts found with this e-mail.");
         }
     }
+    
+    public static bool CreateNewCustomerAccount(string Email, string Password, string FirstName, string LastName, string Gender, int Age, string PhoneNumber, string AccountLanguage, int Accountlevel)
+    {
+    return Database.Insert(new Accounts(Email, Password, FirstName, LastName, Gender, Age, PhoneNumber, "EN", 3));
+    }
+    public static void RemoveAccountFromSystem(int AccountLevelID) 
+    {
+        string ActionResult = Database.DeleteAccount(AccountLevelID);
 
-    public static void RemoveAccountFromSystem(int AccountLevelID) {
-        string resultFromAction = Database.DeleteAccount(AccountLevelID);
-        if (resultFromAction != "invalid input") {
-            Console.WriteLine(resultFromAction);
-        } else {
+        if (ActionResult != "invalid input") 
+        {
+            Console.WriteLine(ActionResult);
+        } 
+        else 
+        {
             Console.WriteLine("There was an error while trying to delete the account, please try it again later");
         }
     }
+
+    public static bool CheckCurrPassword(string input, Accounts LoggedInAccount) => Database.CheckAccountPassword(LoggedInAccount.ID, input);
+
+    public static bool DoesAccountEmailExist(string inputEmail) => Database.DoesEmailAlreadyExist(inputEmail);
+
+    public static int GetInfoSharedCode(Accounts AccountID1, Accounts AccountID2) {
+        int resultCheck = Database.SelectSharedInfoCode(AccountID1.ID, AccountID2.ID);
+        if (resultCheck == 999999999) {
+            Database.InsertInformationShare(AccountID1, AccountID2);
+            return Database.SelectSharedInfoCode(AccountID1.ID, AccountID2.ID);
+        }
+        return resultCheck;
+    }
+
+    public static void UpdateShareInfo(int AccountIDOne, int AccountIDTwo, int ShareInfoCode) => Database.UpdateShareInfo(AccountIDOne, AccountIDTwo, ShareInfoCode);
+
+    // internal static bool CreateNewCustomerAccount(string email, string password, string firstName, string lastName, string gender, int age, string phoneNumber)
+    // {
+    //     throw new NotImplementedException();
+    // }
 
 }

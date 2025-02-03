@@ -1,5 +1,5 @@
-public class AccountLevel {
-    public int ID;
+public class AccountLevel : IDBClass {
+    public int ID {get;}
     public string Name;
     public bool CanChangeReservation;
     public bool CanChangeTimeSlots;
@@ -69,4 +69,8 @@ public class AccountLevel {
         }
         return 0;
     }
+
+    public override string ToString() => $"{ID} - {Name}";
+
+    public string ToStringDisplay() => $"ID: {ID}\nName: {Name}\nCanChangeReservation: {CanChangeReservation}\nCanChangeTimeSlots: {CanChangeTimeSlots}\nCanCancelReservations: {CanCancelReservations}\nIsAnAdmin: {IsAnAdmin}\nCanCreateAdmins: {CanCreateAdmins}\nCanViewLogs: {CanViewLogs}";
 }

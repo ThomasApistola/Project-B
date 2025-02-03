@@ -1,62 +1,191 @@
 public static class ReservationLogic {
-    public static string RetrieveReservations(int restaurantID) {
-        string returnValue = "";
-
+    public static string RetrieveReservations(int restaurantID) 
+    {
+        string returnResult = "";
         int i = 0;
+
+        //grab reserv list
         List<Reservations> reservations = Database.SelectReservations(restaurantID);
-        foreach (Reservations reservation in reservations) {
-            i++;
-<<<<<<< Updated upstream
-            ReservationTimeSlots reservationTimeSlot = Database.SelectReservationTimeSlots(reservation.TimeSlotID);
-=======
-            //grab reservation timeslot
-            ReservationTimeSlots reservationTimeSlot = Database.SelectReservationTimeSlot(reservation.TimeSlotID);
-            //retrieve acc info
->>>>>>> Stashed changes
-            Accounts accounts = Database.SelectAccount(reservation.AccountID);
+        if (reservations.Count > 0) {
+            foreach (Reservations reservation in reservations) 
+            {
+                i++;
+                //grab reservation timeslot
+                ReservationTimeSlots reservationTimeSlot = Database.SelectReservationTimeSlot(reservation.TimeSlotID);
+            
+                if (reservationTimeSlot.EndDateTime >= DateTime.Now) {
+                    //retrieve acc info
+                    Accounts accounts = Database.SelectAccount(reservation.AccountID);
+                    
+                    //add enter to every line
+                    if (returnResult != "") 
+                    {
+                        returnResult += "\n";
+                    }
 
-            string reservation_status = "";
-            if (reservation.Status == 1) {
-                reservation_status = "CANCELLED";
+                    if (reservation.Status == 1) {
+                        returnResult += $"Reservation for: {accounts.FirstName} {accounts.LastName} {accounts.Age} {accounts.Gender}, Table: {reservation.TableID}, Date: {reservationTimeSlot.GetDate()}, from {reservationTimeSlot.GetStartTime24()} to {reservationTimeSlot.GetEndTime24()} - CANCELLED";
+                    } else {
+                        returnResult += $"Reservation for: {accounts.FirstName} {accounts.LastName} {accounts.Age} {accounts.Gender}, Table: {reservation.TableID}, Date: {reservationTimeSlot.GetDate()}, from {reservationTimeSlot.GetStartTime24()} to {reservationTimeSlot.GetEndTime24()}";
+                    }
+                }
             }
+        } else {
+            returnResult = "No reservations found";
+        }
+        
+        return returnResult;
+    }
 
-            if (returnValue != "") {
-                returnValue += "\n";
+    public static List<Reservations> RetrieveCurrReservations(int restaurantID) {
+        List<Reservations> reservations = Database.SelectReservations(restaurantID);
+
+        IEnumerable<Reservations> returnValue =
+            from Reservations in reservations
+            where TimeSlotLogic.GetSelectedTimeSlot(Reservations.TimeSlotID).StartDateTime > DateTime.Now
+            select Reservations;
+
+        return returnValue.ToList();
+    }
+
+    public static List<Reservations> RemoveCancelled(List<Reservations> reservations) {
+        IEnumerable<Reservations> returnValue =
+            from Reservations in reservations
+            where Reservations.Status != 1
+            select Reservations;
+
+        return returnValue.ToList();
+    }
+
+    public static string RetrieveCurrentReservations(int restaurantID) 
+    {
+        string returnResult = "";
+        int i = 0;
+
+        //grab reserv list
+        List<Reservations> reservations = Database.SelectReservations(restaurantID);
+        if (reservations.Count > 0) {
+            foreach (Reservations reservation in reservations) 
+            {
+                i++;
+                //grab reservation timeslot
+                ReservationTimeSlots reservationTimeSlot = Database.SelectReservationTimeSlot(reservation.TimeSlotID);
+                if (reservationTimeSlot.StartDateTime <= DateTime.Now & reservationTimeSlot.EndDateTime >= DateTime.Now) {
+                    //retrieve acc info
+                    Accounts accounts = Database.SelectAccount(reservation.AccountID);
+                    
+                    //add enter to every line
+                    if (returnResult != "") 
+                    {
+                        returnResult += "\n";
+                    }
+
+                    //format return
+                    if (reservation.Status == 1) {
+                        returnResult += $"Reservation for: {accounts.FirstName} {accounts.LastName} ({accounts.Age}) {accounts.Gender}, Table: {reservation.TableID}, Date: {reservationTimeSlot.GetDate()}, from {reservationTimeSlot.GetStartTime24()} to {reservationTimeSlot.GetEndTime24()} - CANCELLED";
+                    } else {
+                        returnResult += $"Reservation for: {accounts.FirstName} {accounts.LastName} ({accounts.Age}) {accounts.Gender}, Table: {reservation.TableID}, Date: {reservationTimeSlot.GetDate()}, from {reservationTimeSlot.GetStartTime24()} to {reservationTimeSlot.GetEndTime24()}";
+                    }
+                }
             }
-
-            returnValue += $"{i} - Reservation for: {accounts.FirstName} {accounts.LastName}, Table: {reservation.TableID}, Date: {reservationTimeSlot.GetDate()}, from {reservationTimeSlot.GetStartTime()} to {reservationTimeSlot.GetEndTime()}";
+        } else {
+            returnResult = "No reservations found";
         }
 
+        return returnResult;
+    }
+
+    public static List<Reservations> RetrievePreviousReservations(int restaurantID, int AccountID) 
+    {
+        List<Reservations> returnResult = [];
+        int i = 0;
+
+        //grab reserv list
+        List<Reservations> reservations = Database.SelectReservations(restaurantID, AccountID);
+        
+        if (reservations.Count > 0) {
+            foreach (Reservations reservation in reservations) 
+            {
+                i++;
+                //grab reservation timeslot
+                ReservationTimeSlots reservationTimeSlot = Database.SelectReservationTimeSlot(reservation.TimeSlotID);
+                if (reservationTimeSlot.StartDateTime <= DateTime.Now) {
+                    returnResult.Add(reservation);
+                }
+            }
+        }
+        
+        return returnResult;
+    }
+
+ public static string RetrieveReservations(int restaurantID, int AccountID) {
+    string returnResult = "";
+    int i = 0;
+
+    List<Reservations> reservations = Database.SelectReservations(restaurantID, AccountID);
+    
+    if (reservations.Count == 0) {
+     return "No reservations found.";}
+
+
+    foreach (Reservations reservation in reservations) {
+        i++;
+
+        ReservationTimeSlots reservationTimeSlot = Database.SelectReservationTimeSlot(reservation.TimeSlotID);
+
+
+        if (reservationTimeSlot.EndDateTime >= DateTime.Now) {
+            Accounts accounts = Database.SelectAccount(reservation.AccountID);
+
+            List<Reservations> TableReservations = Database.SelectReservationsForTableAndTimeSlot(reservation.TimeSlotID, reservation.TableID);
+
+
+
+
+            string matchmakingInfo = "";
+    
+
+    foreach (Reservations tableReservation in TableReservations) {
+    if (tableReservation == null) {
+        Console.WriteLine("tableReservation is null!");
+    } 
+    
+    if (tableReservation.AccountID != reservation.AccountID) {
+        Accounts partnerAccount = Database.SelectAccount(tableReservation.AccountID);
+        matchmakingInfo += $"{partnerAccount.Gender} ({partnerAccount.Age}), ";
+    }
+
+            if (returnResult != "") {
+                returnResult += "\n";
+            }
+
+            returnResult += $"{i} - Reservation: {reservation.ID}, Table: {reservation.TableID}, Matchmaking Partners: {(!string.IsNullOrEmpty(matchmakingInfo) ? matchmakingInfo.TrimEnd(',', ' ') : "None")}, Date: {reservationTimeSlot.GetDate()}, from {reservationTimeSlot.GetStartTime24()} to {reservationTimeSlot.GetEndTime24()}";
+        }}}
+    
+
+    return returnResult;
+}
+
+
+    public static List<Reservations> RetrieveReservations(int restaurantID, Reservations reservations) => Database.SelectReservations(restaurantID, reservations);
+
+    public static bool CreateReservation(int restaurantID, int TimeSlotID, int AccountID, int table) {
+        return Database.Insert(new Reservations(restaurantID, TimeSlotID, table, AccountID, 0));
+    }
+
+    public static bool CancelReservationsBulk(int timeslotID, Accounts LoggedAccount) => Database.UpdateReservationStatusBulk(timeslotID, 1);
+
+    public static bool CancelReservation(Reservations reservations) => Database.UpdateReservationStatus(reservations, 1);
+
+    public static List<string> ConvertToDisplayString(List<Reservations> reservations) {
+        List<string> returnValue = [];
+        foreach (Reservations reservation in reservations) {
+            ReservationTimeSlots reservationTimeSlot = Database.SelectReservationTimeSlot(reservation.TimeSlotID);
+            returnValue.Add($"Reservation: {reservation.ID}, Table: {reservation.TableID}, Date: {reservationTimeSlot.GetDate()}, from {reservationTimeSlot.GetStartTime24()} to {reservationTimeSlot.GetEndTime24()}");
+        }
         return returnValue;
     }
 
-    public static bool CreateReservation(int restaurantID, string firstName, string lastName, string email, string phoneNumber, string date, string startTime, string endTime, int table) {
-        Accounts account = new (email, firstName, lastName, phoneNumber, 3);
-        ReservationTimeSlots timeslot = new ReservationTimeSlots(restaurantID, date, startTime, endTime);
-        
-        Database.Insert(account);
-        Database.Insert(timeslot);
+   
 
-        int DB_accountID = Database.Temp_GetLastID("Accounts");
-        int DB_TimeslotID = Database.Temp_GetLastID("ReservationTimeSlots");
-
-<<<<<<< Updated upstream
-        Reservations reservation = new Reservations(restaurantID, DB_TimeslotID, table, DB_accountID, 0);
-=======
-        foreach (Reservations reservation in reservations) 
-        {
-            i++;
-            //grab reservation timeslot
-            ReservationTimeSlots reservationTimeSlot = Database.SelectReservationTimeSlot(reservation.TimeSlotID);
-            //retrieve acc info
-            Accounts accounts = Database.SelectAccount(reservation.AccountID);
->>>>>>> Stashed changes
-
-        return Database.Insert(reservation);
-    }
-
-    public static bool CancelReservation(int timeslotID, Accounts LoggedAccount) {
-        //1 defines that a reservation has been cancelled
-        return Database.UpdateReservationStatus(timeslotID, 1);
-    }
 }
